@@ -10,6 +10,27 @@
 - Helm 3.x
 - kubectl configured to communicate with your cluster
 
+### Create Configuration Secret
+
+Create a secret file with the configuration for Parseable:
+
+```sh
+cat << EOF > parseable-env-secret
+addr=0.0.0.0:8000
+staging.dir=./staging
+fs.dir=./data
+username=admin
+password=admin
+EOF
+```
+
+Then create the secret in Kubernetes:
+
+```sh
+kubectl create ns parseable
+kubectl create secret generic parseable-env-secret --from-env-file=parseable-env-secret -n parseable
+```
+
 ### Add Required Helm Repositories
 
 ```sh
@@ -38,9 +59,12 @@ helm install parseable parseable/parseable -n parseable --create-namespace \
   --set parseable.persistence.data.enabled=true \
   --set parseable.persistence.data.storageClass=standard \
   --set parseable.localModeSecret.enabled=true \
+  --set parseable.localModeSecret.name=parseable-env-secret \
   --set fluent-bit.enabled=true \
   --set fluent-bit.serverHost=parseable.parseable.svc.cluster.local
 ```
+
+Note: This installation command uses the `parseable-env-secret` we created earlier.
 
 ### Access the Parseable Dashboard
 
@@ -155,6 +179,17 @@ Enable Vector for additional log collection capabilities:
    ```sh
    kubectl get pods -n parseable
    kubectl logs deployment/parseable -n parseable
+   ```
+
+4. **Configuration Secret Issues**
+   
+   If Parseable pods are failing to start and logs show configuration-related errors, verify your secret:
+   ```sh
+   # Check if the secret exists
+   kubectl get secret parseable-env-secret -n parseable
+   
+   # Recreate the secret if needed
+   kubectl create secret generic parseable-env-secret --from-env-file=parseable-env-secret -n parseable --dry-run=client -o yaml | kubectl apply -f -
    ```
 
 ## Using Lua scripts with Fluent Bit
