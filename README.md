@@ -26,6 +26,8 @@ password=admin
 EOF
 ```
 
+**Note:** The `addr=0.0.0.0:8000` setting configures Parseable to listen on port 8000 internally. The Kubernetes service will expose this on port 80, which we'll later forward to port 8080 on your local machine.
+
 Then create the namespace and secret in Kubernetes:
 
 ```sh
@@ -84,6 +86,8 @@ kubectl port-forward svc/parseable 8080:80 -n parseable
 ```
 
 Then open your browser and navigate to http://localhost:8080
+
+**Note:** While the Parseable container listens on port 8000 (as configured in the secret), the Kubernetes service exposes it on port 80, which we forward to local port 8080.
 
 Login with the default credentials:
 - Username: admin
