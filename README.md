@@ -12,6 +12,8 @@
 
 ### Create Configuration Secret
 
+**Important:** This step must be completed before installing Parseable with Helm.
+
 Create a secret file with the configuration for Parseable:
 
 ```sh
@@ -24,12 +26,16 @@ password=admin
 EOF
 ```
 
-Then create the secret in Kubernetes:
+Then create the namespace and secret in Kubernetes:
 
 ```sh
 kubectl create ns parseable
 kubectl create secret generic parseable-env-secret --from-env-file=parseable-env-secret -n parseable
 ```
+
+**Note:** 
+- The secret **must** be created before running the Helm install command.
+- The namespace must also be created before running the Helm install command.
 
 ### Add Required Helm Repositories
 
@@ -49,10 +55,10 @@ helm repo update
 
 ### Install Parseable with Local Storage and Fluent Bit Enabled
 
-To install Parseable with local storage and Fluent Bit enabled, run:
+**After** creating the secret in the previous step, install Parseable with local storage and Fluent Bit enabled:
 
 ```sh
-helm install parseable parseable/parseable -n parseable --create-namespace \
+helm install parseable parseable/parseable -n parseable \
   --set parseable.store=local-store \
   --set parseable.persistence.staging.enabled=true \
   --set parseable.persistence.staging.storageClass=standard \
@@ -64,7 +70,10 @@ helm install parseable parseable/parseable -n parseable --create-namespace \
   --set fluent-bit.serverHost=parseable.parseable.svc.cluster.local
 ```
 
-Note: This installation command uses the `parseable-env-secret` we created earlier.
+**Important Notes:**
+- The installation references the `parseable-env-secret` we created in the previous step.
+- Make sure the namespace has been created before running this command.
+- If you're using a different storage class, replace `standard` with your cluster's storage class name.
 
 ### Access the Parseable Dashboard
 
